@@ -1,4 +1,4 @@
-cat > /mnt/user-data/outputs/prompat-football.html << 'HTMLEOF'
+cat > /home/claude/prompat-football.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -150,7 +150,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
 
 <nav>
   <div class="nav-logo">PR</div>
-  <div class="nav-tag">⚽ v3.0</div>
+  <div class="nav-tag">⚽ v3.1</div>
 </nav>
 
 <section id="hero">
@@ -168,8 +168,8 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
   <div class="section-label"><span>// game zone</span></div>
   <h2 class="game-title">FOOTBALL <span>ZONE</span></h2>
   <p class="game-desc" id="mode-desc">
-    🖥️ Desktop: click to nudge · press <kbd style="background:var(--border);padding:1px 5px;border-radius:3px;">E</kbd> to kick · drag goal to move it<br>
-    📱 Mobile: tap to nudge · tap KICK · drag goal zone
+    🖥️ Desktop: click anywhere to aim &amp; shoot in penalty · press <kbd style="background:var(--border);padding:1px 5px;border-radius:3px;">E</kbd> to kick in free mode<br>
+    📱 Mobile: tap to aim &amp; shoot in penalty · tap KICK in free mode
   </p>
   <div class="game-wrapper">
     <div class="game-topbar">
@@ -284,7 +284,7 @@ const btnKick   = document.getElementById('btn-kick');
    STATE
 ============================================================ */
 let bx, by, vx=0, vy=0, goals=0;
-let gzPX, gzPY, gzS=90, gzW=14;
+let gzPX, gzPY, gzS=90, gzW=28; // wider goal zone by default
 let gkX=88, gkY=50, gkSpd=3;
 let bSize=28, friction=0.97, kickPow=18;
 
@@ -292,9 +292,8 @@ let bSize=28, friction=0.97, kickPow=18;
 let penaltyMode = false;
 let penPhase    = 'aim'; // 'aim' | 'flying' | 'result'
 let penGoals    = 0, penSaved = 0;
-let penAimX, penAimY;          // where user is hovering/aiming
-let gkDiveDir   = null;        // null | 'up'|'down'|'left'|'right'
-let gkDiveTargetY = 50;        // where GK will actually move on kick
+let penAimX, penAimY;
+let gkDiveTargetY = 50;
 let penResultTimer = null;
 
 /* ============================================================
@@ -309,7 +308,7 @@ function H(){ return fc.clientHeight; }
 let gzDragging=false, gzDragOffX=0, gzDragOffY=0;
 
 function setGZpos(px, py){
-  if(penaltyMode) return; // locked in penalty mode
+  if(penaltyMode) return;
   gzPX = Math.max(gzW, Math.min(W()-gzW, px));
   gzPY = Math.max(gzS/2, Math.min(H()-gzS/2, py));
   gzEl.style.left = gzPX+'px';
@@ -402,17 +401,19 @@ function drawPitch(){
 ============================================================ */
 function loop(){
   const w=W(), h=H(), r=bSize/2;
-  vx*=friction; vy*=friction;
-  if(Math.abs(vx)<0.04) vx=0;
-  if(Math.abs(vy)<0.04) vy=0;
-  bx+=vx; by+=vy;
-  if(bx-r<0){bx=r;vx=Math.abs(vx)*0.65;}
-  if(bx+r>w){bx=w-r;vx=-Math.abs(vx)*0.65;}
-  if(by-r<0){by=r;vy=Math.abs(vy)*0.65;}
-  if(by+r>h){by=h-r;vy=-Math.abs(vy)*0.65;}
 
-  // GK collision (only in free mode, penalty GK dives on kick)
   if(!penaltyMode){
+    // FREE MODE: apply velocity + bounce off walls
+    vx*=friction; vy*=friction;
+    if(Math.abs(vx)<0.04) vx=0;
+    if(Math.abs(vy)<0.04) vy=0;
+    bx+=vx; by+=vy;
+    if(bx-r<0){bx=r;vx=Math.abs(vx)*0.65;}
+    if(bx+r>w){bx=w-r;vx=-Math.abs(vx)*0.65;}
+    if(by-r<0){by=r;vy=Math.abs(vy)*0.65;}
+    if(by+r>h){by=h-r;vy=-Math.abs(vy)*0.65;}
+
+    // GK collision
     const gkCX=w*gkX/100, gkCY=h*gkY/100;
     const dx=bx-gkCX, dy=by-gkCY;
     if(Math.abs(dx)<r+13 && Math.abs(dy)<r+22){
@@ -420,59 +421,82 @@ function loop(){
       if(ox<oy){vx=dx>0?Math.abs(vx)+3:-Math.abs(vx)-3; bx+=dx>0?ox:-ox;}
       else{vy=dy>0?Math.abs(vy)+3:-Math.abs(vy)-3; by+=dy>0?oy:-oy;}
     }
-    // GK AI — track ball Y slowly
+    // GK AI track ball Y
     const targetY=(by/h)*100;
     gkY+=(targetY-gkY)*(gkSpd*0.01);
     gkY=Math.max(8,Math.min(92,gkY));
     updateGK();
-  } else {
-    // penalty — GK dives toward decided target after kick
-    if(penPhase==='flying'){
-      const targetY=gkDiveTargetY;
-      gkY+=(targetY-gkY)*(gkSpd*0.05);
-      gkY=Math.max(8,Math.min(92,gkY));
-      updateGK();
-    }
-  }
 
-  // goal check
-  if(gzPX!==undefined){
-    const halfH=gzS/2, halfW=gzW/2+2;
-    if(bx+r>gzPX-halfW && bx-r<gzPX+halfW && by+r>gzPY-halfH && by-r<gzPY+halfH){
-      if(penaltyMode && penPhase==='flying'){
-        penGoals++; penGEl.textContent=penGoals;
-        goals++; gcEl.textContent=goals; totalGoalsEl.textContent=goals;
-        showPopup('GOAL!', false);
-        penPhase='result';
-        schedulePenReset();
-      } else if(!penaltyMode){
+    // goal check free mode
+    if(gzPX!==undefined){
+      const halfH=gzS/2, halfW=gzW/2+2;
+      if(bx+r>gzPX-halfW && bx-r<gzPX+halfW && by+r>gzPY-halfH && by-r<gzPY+halfH){
         goals++; gcEl.textContent=goals; totalGoalsEl.textContent=goals;
         showPopup('GOAL!', false);
         bx=w/2; by=h/2; vx=0; vy=0;
       }
     }
-  }
 
-  // penalty: check if ball passed GK zone without going in goal → saved
-  if(penaltyMode && penPhase==='flying' && gzPX!==undefined){
-    const gkCX=w*gkX/100, gkCY=h*gkY/100;
-    const dx=bx-gkCX, dy=by-gkCY;
-    // very generous hitbox when diving
-    if(Math.abs(dx)<r+20 && Math.abs(dy)<r+36){
-      penSaved++; penSEl.textContent=penSaved;
-      showPopup('SAVED!', true);
-      penPhase='result';
-      vx=0; vy=0;
-      schedulePenReset();
+  } else {
+    // PENALTY MODE
+    if(penPhase==='flying'){
+      // Apply velocity — NO wall bounce in penalty (ball flies through)
+      vx*=friction; vy*=friction;
+      bx+=vx; by+=vy;
+
+      // GK dives toward predicted target
+      const targetY=gkDiveTargetY;
+      gkY+=(targetY-gkY)*(gkSpd*0.05);
+      gkY=Math.max(8,Math.min(92,gkY));
+      updateGK();
+
+      const gkCX=w*gkX/100, gkCY=h*gkY/100;
+
+      // Check goal first
+      if(gzPX!==undefined){
+        const halfH=gzS/2, halfW=gzW/2+2;
+        if(bx+r>gzPX-halfW && bx-r<gzPX+halfW && by+r>gzPY-halfH && by-r<gzPY+halfH){
+          penGoals++; penGEl.textContent=penGoals;
+          goals++; gcEl.textContent=goals; totalGoalsEl.textContent=goals;
+          showPopup('GOAL!', false);
+          penPhase='result';
+          vx=0; vy=0;
+          schedulePenReset();
+        }
+      }
+
+      // Check GK save (only if not already scored)
+      if(penPhase==='flying'){
+        const dxGK=bx-gkCX, dyGK=by-gkCY;
+        if(Math.abs(dxGK)<r+20 && Math.abs(dyGK)<r+40){
+          penSaved++; penSEl.textContent=penSaved;
+          showPopup('SAVED!', true);
+          penPhase='result';
+          vx=0; vy=0;
+          schedulePenReset();
+        }
+      }
+
+      // Ball exits right side (past goal line) without scoring = missed
+      if(penPhase==='flying' && bx-r>w){
+        penSaved++; penSEl.textContent=penSaved;
+        showPopup('MISSED!', true);
+        penPhase='result';
+        vx=0; vy=0;
+        schedulePenReset();
+      }
+
+      // Ball exits top/bottom without scoring = missed
+      if(penPhase==='flying' && (by+r<0 || by-r>h)){
+        penSaved++; penSEl.textContent=penSaved;
+        showPopup('MISSED!', true);
+        penPhase='result';
+        vx=0; vy=0;
+        schedulePenReset();
+      }
+
     }
-    // ball went past goal line area without scoring = saved (missed)
-    if(bx+r>w){
-      penSaved++; penSEl.textContent=penSaved;
-      showPopup('MISSED!', true);
-      penPhase='result';
-      vx=0; vy=0;
-      schedulePenReset();
-    }
+    // In 'aim' and 'result' phases ball is stationary — no movement
   }
 
   ballEl.style.left = bx+'px'; ballEl.style.top = by+'px';
@@ -497,7 +521,7 @@ function showPopup(text, isBad){
    KICK (FREE MODE)
 ============================================================ */
 function doKick(){
-  if(penaltyMode){ doPenaltyKick(); return; }
+  if(penaltyMode) return; // penalty kick is via click/tap on pitch
   if(gzPX===undefined) return;
   const dx=gzPX-bx, dy=gzPY-by, d=Math.hypot(dx,dy)||1;
   vx=(dx/d)*kickPow; vy=(dy/d)*kickPow;
@@ -505,38 +529,30 @@ function doKick(){
 }
 
 /* ============================================================
-   PENALTY KICK
+   PENALTY KICK — triggered by click/tap on pitch
 ============================================================ */
-function doPenaltyKick(){
-  if(penPhase!=='aim') return;
-  if(penAimX===undefined) return;
+function doPenaltyKick(aimX, aimY){
+  if(!penaltyMode || penPhase!=='aim') return;
 
-  penPhase='flying';
+  penAimX = aimX;
+  penAimY = aimY;
+  penPhase = 'flying';
 
-  // direction of aim relative to goal
   const dx=penAimX-bx, dy=penAimY-by, d=Math.hypot(dx,dy)||1;
-  vx=(dx/d)*kickPow*1.3; vy=(dy/d)*kickPow*1.3;
+  vx=(dx/d)*kickPow*1.4; vy=(dy/d)*kickPow*1.4;
 
-  // GK PREDICTION: reads trajectory + adds small random error
-  // predict where ball crosses gk's X line
+  // GK prediction with error based on speed
   const gkCX = W()*gkX/100;
-  const timeToGK = d>0 ? (gkCX - bx) / vx : 1;
-  let predictedY = by + vy * timeToGK;
-
-  // add prediction error — harder GK speed = less error
-  const errorRange = (180 - gkSpd*15); // higher speed → tighter prediction
-  const error = (Math.random()-0.5) * errorRange;
-  predictedY += error;
-
-  // clamp to pitch
+  const travelTime = Math.abs(gkCX - bx) / (Math.abs(vx)||1);
+  let predictedY = by + vy * travelTime;
+  const errorRange = Math.max(20, 180 - gkSpd*15);
+  predictedY += (Math.random()-0.5) * errorRange;
   predictedY = Math.max(0, Math.min(H(), predictedY));
   gkDiveTargetY = (predictedY / H()) * 100;
 
   // pick dive animation direction
-  const aimRelY = penAimY / H(); // 0=top 1=bottom
-  const gkRelY  = gkY / 100;
-  const diffY   = aimRelY - gkRelY;
-  const diffX   = (penAimX / W()) - (gkX / 100);
+  const diffY = (penAimY / H()) - (gkY / 100);
+  const diffX = (penAimX / W()) - (gkX / 100);
   let diveClass;
   if(Math.abs(diffY) > Math.abs(diffX)){
     diveClass = diffY < 0 ? 'dive-up' : 'dive-down';
@@ -544,7 +560,7 @@ function doPenaltyKick(){
     diveClass = diffX < 0 ? 'dive-left' : 'dive-right';
   }
   gkEl.classList.remove('dive-up','dive-down','dive-left','dive-right');
-  void gkEl.offsetWidth; // reflow
+  void gkEl.offsetWidth;
   gkEl.classList.add(diveClass);
 
   triggerFlash(penFlash, bx, by);
@@ -553,21 +569,18 @@ function doPenaltyKick(){
 
 function schedulePenReset(){
   clearTimeout(penResultTimer);
-  penResultTimer = setTimeout(()=>{
-    resetPenaltyBall();
-  }, 1400);
+  penResultTimer = setTimeout(resetPenaltyBall, 1400);
 }
 
 function resetPenaltyBall(){
   const w=W(), h=H();
-  // put ball at penalty spot: 1/3 from right, middle height
   bx = w*0.62; by = h*0.5;
   vx=0; vy=0;
   penPhase='aim';
   gkEl.classList.remove('dive-up','dive-down','dive-left','dive-right');
-  // reset GK to center of goal area
   gkY=50; updateGK();
   aimEl.style.display='block';
+  aimEl.style.left=bx+'px'; aimEl.style.top=by+'px';
 }
 
 /* ============================================================
@@ -586,7 +599,7 @@ function triggerFlash(el, x, y){
 }
 
 /* ============================================================
-   AIM TRACKING (penalty mode hover/touch)
+   AIM TRACKING (penalty hover)
 ============================================================ */
 fc.addEventListener('mousemove', e=>{
   if(!penaltyMode || penPhase!=='aim') return;
@@ -597,37 +610,35 @@ fc.addEventListener('mousemove', e=>{
 });
 
 /* ============================================================
-   NUDGE / TAP (free mode)
+   NUDGE / TAP / PENALTY AIM
 ============================================================ */
 function nudgeToward(clientX, clientY){
-  if(gzDragging || penaltyMode) return;
+  if(gzDragging) return;
   const r=fc.getBoundingClientRect();
   const mx=clientX-r.left, my=clientY-r.top;
   const dx=mx-bx, dy=my-by, d=Math.hypot(dx,dy)||1;
   vx+=(dx/d)*5; vy+=(dy/d)*5;
 }
 
-// penalty: click on pitch = set aim and kick
-function penAimAndKick(clientX, clientY){
-  if(penPhase!=='aim') return;
-  const r=fc.getBoundingClientRect();
-  penAimX = clientX - r.left;
-  penAimY = clientY - r.top;
-  aimEl.style.left=penAimX+'px'; aimEl.style.top=penAimY+'px';
-  doPenaltyKick();
-}
-
 fc.addEventListener('click', e=>{
-  if(penaltyMode) penAimAndKick(e.clientX, e.clientY);
-  else nudgeToward(e.clientX, e.clientY);
+  if(penaltyMode){
+    const r=fc.getBoundingClientRect();
+    doPenaltyKick(e.clientX-r.left, e.clientY-r.top);
+  } else {
+    nudgeToward(e.clientX, e.clientY);
+  }
 });
 
 fc.addEventListener('touchstart', e=>{
   if(gzDragging) return;
   e.preventDefault();
   const t=e.changedTouches[0];
-  if(penaltyMode) penAimAndKick(t.clientX, t.clientY);
-  else nudgeToward(t.clientX, t.clientY);
+  if(penaltyMode){
+    const r=fc.getBoundingClientRect();
+    doPenaltyKick(t.clientX-r.left, t.clientY-r.top);
+  } else {
+    nudgeToward(t.clientX, t.clientY);
+  }
 },{passive:false});
 
 /* ============================================================
@@ -661,28 +672,29 @@ function setMode(isPenalty){
   lockGoalZone(isPenalty);
 
   if(isPenalty){
-    // place goal on right wall, centered
     const w=W(), h=H();
-    gzPX = w*0.97; gzPY = h*0.5; gzS=110; gzW=14;
+    // wider goal zone for penalty
+    gzS=130; gzW=28;
+    gzPX = w*0.97; gzPY = h*0.5;
     gzEl.style.left=gzPX+'px'; gzEl.style.top=gzPY+'px';
     updateGZsize();
-    // fix GK at goal area
     gkX=88; gkY=50; updateGK();
     gkLabelEl.textContent='GK 🧤';
-    // reset penalty score
     penGoals=0; penSaved=0;
     penGEl.textContent='0'; penSEl.textContent='0';
-    hintBar.textContent='click/tap anywhere to aim & shoot';
+    hintBar.textContent='click / tap where you want to shoot';
     aimEl.style.display='block';
     resetPenaltyBall();
     penPhase='aim';
   } else {
     aimEl.style.display='none';
     gkLabelEl.textContent='GK';
+    vx=0; vy=0;
     const w=W(), h=H();
-    bx=w/2; by=h/2; vx=0; vy=0;
+    bx=w/2; by=h/2;
     gkX=88; gkY=50; updateGK();
-    gzPX=w*0.94; gzPY=h*0.5; gzS=90; gzW=14;
+    gzS=90; gzW=14;
+    gzPX=w*0.94; gzPY=h*0.5;
     gzEl.style.left=gzPX+'px'; gzEl.style.top=gzPY+'px';
     updateGZsize();
     hintBar.textContent='tap / click to nudge · E or KICK to shoot';
@@ -694,7 +706,8 @@ function setMode(isPenalty){
 ============================================================ */
 btnKick.addEventListener('click', doKick);
 document.getElementById('btn-reset').addEventListener('click', ()=>{
-  if(penaltyMode){ penPhase='aim'; resetPenaltyBall(); }
+  clearTimeout(penResultTimer);
+  if(penaltyMode){ penPhase='aim'; vx=0; vy=0; resetPenaltyBall(); }
   else { bx=W()/2; by=H()/2; vx=0; vy=0; }
 });
 
