@@ -1,3 +1,5 @@
+cat > /mnt/user-data/outputs/prompat-football.html << 'HTMLEOF'
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -15,70 +17,105 @@ html{scroll-behavior:smooth;}
 body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;overflow-x:hidden;}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,160,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,160,0.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
 
-/* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:rgba(10,10,15,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
 .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--accent);text-shadow:var(--glow);}
 .nav-tag{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);border:1px solid var(--border);padding:4px 10px;border-radius:20px;}
 
-/* HERO */
 #hero{position:relative;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px 20px 60px;z-index:1;}
 .hero-eyebrow{font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);letter-spacing:4px;text-transform:uppercase;margin-bottom:20px;opacity:0;animation:fadeUp 0.6s 0.2s forwards;}
 .hero-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(56px,14vw,140px);line-height:0.9;letter-spacing:4px;color:#fff;opacity:0;animation:fadeUp 0.7s 0.35s forwards;}
 .hero-name span{color:var(--accent);text-shadow:0 0 40px rgba(0,229,160,0.5);}
 .hero-sub{font-size:15px;color:var(--muted);margin-top:20px;letter-spacing:1px;opacity:0;animation:fadeUp 0.7s 0.5s forwards;}
-
 .hero-stats{display:flex;gap:36px;margin-top:48px;opacity:0;animation:fadeUp 0.7s 0.75s forwards;}
 .stat{text-align:center;}
 .stat-n{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--accent);}
 .stat-l{font-size:10px;color:var(--muted);letter-spacing:2px;font-family:'DM Mono',monospace;}
 
-/* SECTION LABEL */
 .section-label{display:flex;align-items:center;gap:16px;margin-bottom:32px;}
 .section-label span{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:3px;}
 .section-label::after{content:'';flex:1;height:1px;background:var(--border);}
 
-/* GAME SECTION */
 #game{position:relative;z-index:1;padding:60px 16px;max-width:1100px;margin:0 auto;}
 .game-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,8vw,52px);letter-spacing:3px;line-height:1;}
 .game-title span{color:var(--accent);}
 .game-desc{color:var(--muted);font-size:13px;margin-top:8px;font-family:'DM Mono',monospace;line-height:1.7;}
 .game-wrapper{margin-top:24px;border-radius:12px;overflow:hidden;border:1px solid var(--border);box-shadow:0 0 60px rgba(0,0,0,0.6);}
-.game-topbar{background:var(--card);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;}
-.topbar-dots{display:flex;gap:7px;}
+
+/* TOPBAR */
+.game-topbar{background:var(--card);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.topbar-dots{display:flex;gap:7px;flex-shrink:0;}
 .dot{width:11px;height:11px;border-radius:50%;}
 .d1{background:#ff5f57;}.d2{background:#febc2e;}.d3{background:#28c840;}
 .topbar-title{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);}
+.topbar-right{display:flex;align-items:center;gap:12px;}
 .score-badge{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--accent);letter-spacing:2px;}
+
+/* MODE SWITCH */
+.mode-switch{display:flex;background:var(--bg);border-radius:20px;border:1px solid var(--border);overflow:hidden;}
+.mode-btn{padding:5px 14px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all 0.2s;}
+.mode-btn.active{background:var(--accent);color:#0a0a0f;font-weight:600;}
+.mode-btn:first-child.active{background:var(--accent);}
+.mode-btn:last-child.active{background:#ff4b6e;color:#fff;}
 
 /* PITCH */
 #fc{position:relative;width:100%;height:420px;background:#1a5c2b;overflow:hidden;outline:none;touch-action:none;}
 #fc::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(0,0,0,0.05) 60px,rgba(0,0,0,0.05) 120px);pointer-events:none;}
-@media(max-width:600px){#fc{height:340px;}}
+@media(max-width:600px){#fc{height:320px;}}
 .pitch-line{position:absolute;background:rgba(255,255,255,0.3);}
+
+/* penalty overlay */
+#penalty-overlay{position:absolute;inset:0;pointer-events:none;z-index:2;opacity:0;transition:opacity 0.4s;}
+#penalty-overlay.on{opacity:1;}
+.pen-arc{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:200px;height:60px;border-top:2px solid rgba(255,255,255,0.3);border-radius:50% 50% 0 0;}
+.pen-spot{position:absolute;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.6);bottom:70px;left:50%;transform:translateX(-50%);}
+.pen-box{position:absolute;right:0;top:50%;transform:translateY(-50%);width:22%;height:55%;border:2px solid rgba(255,255,255,0.35);border-right:none;}
+
 #ball{position:absolute;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff 0%,#ddd 50%,#aaa 100%);border:2px solid rgba(0,0,0,0.3);transform:translate(-50%,-50%);pointer-events:none;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.5);}
-#gk{position:absolute;transform:translate(-50%,-50%);pointer-events:none;z-index:9;display:flex;flex-direction:column;align-items:center;gap:2px;}
+
+#gk{position:absolute;transform:translate(-50%,-50%);pointer-events:none;z-index:9;display:flex;flex-direction:column;align-items:center;gap:2px;transition:none;}
 .gk-head{width:18px;height:18px;border-radius:50%;background:#f4c07a;border:2px solid rgba(0,0,0,0.2);}
 .gk-body{width:22px;height:36px;background:#ff3355;border-radius:6px 6px 4px 4px;border:2px solid rgba(0,0,0,0.2);}
 .gk-label{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-family:'DM Mono',monospace;font-size:9px;color:#fff;white-space:nowrap;background:rgba(0,0,0,0.5);padding:1px 5px;border-radius:3px;}
+/* gk dive animation */
+#gk.dive-up{animation:diveUp 0.35s ease-out forwards;}
+#gk.dive-down{animation:diveDown 0.35s ease-out forwards;}
+#gk.dive-left{animation:diveLeft 0.35s ease-out forwards;}
+#gk.dive-right{animation:diveRight 0.35s ease-out forwards;}
+@keyframes diveUp{0%{transform:translate(-50%,-50%);}100%{transform:translate(-50%,-50%) translateY(-38px);}}
+@keyframes diveDown{0%{transform:translate(-50%,-50%);}100%{transform:translate(-50%,-50%) translateY(38px);}}
+@keyframes diveLeft{0%{transform:translate(-50%,-50%);}100%{transform:translate(-50%,-50%) translateX(-55px);}}
+@keyframes diveRight{0%{transform:translate(-50%,-50%);}100%{transform:translate(-50%,-50%) translateX(55px);}}
 
-/* GOAL ZONE — draggable */
-#gz{position:absolute;background:rgba(255,255,255,0.08);border:2px dashed rgba(255,255,255,0.6);transform:translate(-50%,-50%);border-radius:4px;z-index:11;cursor:grab;user-select:none;}
+#gz{position:absolute;background:rgba(255,255,255,0.08);border:2px dashed rgba(255,255,255,0.6);transform:translate(-50%,-50%);border-radius:4px;z-index:11;user-select:none;}
+#gz.draggable{cursor:grab;}
 #gz.dragging{cursor:grabbing;background:rgba(0,229,160,0.15);border-color:var(--accent);}
+#gz.locked{cursor:default;border-color:rgba(255,75,110,0.7);background:rgba(255,75,110,0.07);}
 #gz-label{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-family:'DM Mono',monospace;font-size:9px;color:var(--accent);white-space:nowrap;background:rgba(0,0,0,0.6);padding:1px 6px;border-radius:3px;pointer-events:none;}
+#gz.locked #gz-label{color:#ff4b6e;}
 
 #kick-flash{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(0,229,160,0.8),transparent);width:70px;height:70px;transform:translate(-50%,-50%) scale(0);opacity:0;z-index:8;}
+#penalty-kick-flash{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,75,110,0.9),transparent);width:100px;height:100px;transform:translate(-50%,-50%) scale(0);opacity:0;z-index:8;}
 #hint-bar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.75);font-size:11px;background:rgba(0,0,0,0.55);padding:5px 14px;border-radius:20px;pointer-events:none;white-space:nowrap;font-family:'DM Mono',monospace;letter-spacing:0.5px;}
 #goal-popup{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%) scale(0);font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,12vw,80px);color:var(--accent);text-shadow:0 0 40px rgba(0,229,160,0.8);pointer-events:none;z-index:20;opacity:0;transition:all 0.3s;}
+#goal-popup.saved{color:#ff4b6e;text-shadow:0 0 40px rgba(255,75,110,0.8);}
+
+/* penalty score display */
+#pen-score{display:none;position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.65);border:1px solid var(--border);border-radius:20px;padding:6px 18px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#fff;z-index:15;white-space:nowrap;}
+#pen-score span.g{color:var(--accent);}
+#pen-score span.s{color:#ff4b6e;}
+
+/* penalty aim indicator */
+#aim-indicator{position:absolute;width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,0.5);transform:translate(-50%,-50%);pointer-events:none;z-index:12;display:none;transition:left 0.08s,top 0.08s;}
 
 /* MOBILE BUTTONS */
-#mobile-btns{display:none;background:var(--card);border-top:1px solid var(--border);padding:14px 16px;gap:12px;}
+#mobile-btns{display:none;background:var(--card);border-top:1px solid var(--border);padding:12px 16px;gap:10px;}
 @media(max-width:900px){#mobile-btns{display:flex;}}
-.m-btn{flex:1;padding:14px;border-radius:8px;font-family:'DM Mono',monospace;font-size:13px;font-weight:500;letter-spacing:1px;border:none;cursor:pointer;transition:all 0.15s;user-select:none;}
+.m-btn{flex:1;padding:13px;border-radius:8px;font-family:'DM Mono',monospace;font-size:13px;font-weight:500;letter-spacing:1px;border:none;cursor:pointer;transition:all 0.15s;user-select:none;}
 .m-btn:active{transform:scale(0.95);}
-#btn-nudge{background:var(--border);color:var(--text);}
-#btn-nudge.active{background:#2a3a50;border:1px solid #4a8fff;color:#8ac4ff;}
 #btn-kick{background:var(--accent);color:#0a0a0f;}
+#btn-kick.penalty-mode{background:#ff4b6e;color:#fff;}
 #btn-kick:active{box-shadow:0 0 20px rgba(0,229,160,0.6);}
+#btn-kick.penalty-mode:active{box-shadow:0 0 20px rgba(255,75,110,0.6);}
 #btn-reset{background:transparent;color:var(--muted);border:1px solid var(--border);flex:0.5;}
 
 /* SETTINGS */
@@ -90,6 +127,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .ctrl input[type=range]{width:80px;accent-color:var(--accent);}
 .ctrl-val{font-size:11px;color:var(--text);font-family:'DM Mono',monospace;min-width:24px;text-align:right;}
 .settings-note{grid-column:1/-1;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);padding-top:4px;}
+/* hide irrelevant settings in penalty mode */
+body.penalty-active .free-mode-only{opacity:0.25;pointer-events:none;}
 
 /* ABOUT */
 #about{position:relative;z-index:1;padding:60px 16px;max-width:1100px;margin:0 auto;}
@@ -101,11 +140,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .card-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:6px;}
 .card-text{font-size:14px;color:var(--muted);line-height:1.8;}
 
-/* FOOTER */
 footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
 .footer-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:var(--accent);}
 .footer-copy{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;}
-
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
 </style>
 </head>
@@ -113,17 +150,16 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
 
 <nav>
   <div class="nav-logo">PR</div>
-  <div class="nav-tag">⚽ v2.0</div>
+  <div class="nav-tag">⚽ v3.0</div>
 </nav>
 
 <section id="hero">
   <div class="hero-eyebrow">// created by</div>
   <h1 class="hero-name">PROMPAT<br><span>RABIAB</span></h1>
   <p class="hero-sub">Football Game · Dark Mode · Built for fun</p>
-
   <div class="hero-stats">
     <div class="stat"><div class="stat-n" id="total-goals">0</div><div class="stat-l">Goals Scored</div></div>
-    <div class="stat"><div class="stat-n">1</div><div class="stat-l">Game Mode</div></div>
+    <div class="stat"><div class="stat-n" id="hero-mode-stat">FREE</div><div class="stat-l">Current Mode</div></div>
     <div class="stat"><div class="stat-n">∞</div><div class="stat-l">Replays</div></div>
   </div>
 </section>
@@ -131,21 +167,32 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
 <section id="game">
   <div class="section-label"><span>// game zone</span></div>
   <h2 class="game-title">FOOTBALL <span>ZONE</span></h2>
-  <p class="game-desc">
-    🖥️ Desktop: click to nudge · press <kbd style="background:var(--border);padding:1px 5px;border-radius:3px;">E</kbd> to kick<br>
-    📱 Mobile: tap to nudge · tap KICK button · drag the goal to move it
+  <p class="game-desc" id="mode-desc">
+    🖥️ Desktop: click to nudge · press <kbd style="background:var(--border);padding:1px 5px;border-radius:3px;">E</kbd> to kick · drag goal to move it<br>
+    📱 Mobile: tap to nudge · tap KICK · drag goal zone
   </p>
   <div class="game-wrapper">
     <div class="game-topbar">
       <div class="topbar-dots"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div></div>
       <div class="topbar-title">prompat.football</div>
-      <div class="score-badge">GOALS: <span id="gc">0</span></div>
+      <div class="topbar-right">
+        <div class="mode-switch">
+          <button class="mode-btn active" id="btn-free-mode">FREE</button>
+          <button class="mode-btn" id="btn-pen-mode">⚡ PENALTY</button>
+        </div>
+        <div class="score-badge">GOALS: <span id="gc">0</span></div>
+      </div>
     </div>
 
     <div id="fc" tabindex="0">
+      <div id="penalty-overlay">
+        <div class="pen-box"></div>
+        <div class="pen-arc"></div>
+        <div class="pen-spot"></div>
+      </div>
       <div id="ball"></div>
       <div id="gk">
-        <div class="gk-label">GK</div>
+        <div class="gk-label" id="gk-label">GK</div>
         <div class="gk-head"></div>
         <div class="gk-body"></div>
       </div>
@@ -153,27 +200,28 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
         <div id="gz-label">⚽ GOAL — drag me</div>
       </div>
       <div id="kick-flash"></div>
+      <div id="penalty-kick-flash"></div>
+      <div id="aim-indicator"></div>
       <div id="goal-popup">GOAL!</div>
-      <div id="hint-bar" id="hint-bar">tap / click to nudge · E or KICK button to shoot</div>
+      <div id="pen-score"><span class="g" id="pen-g">0</span> — <span class="s" id="pen-s">0</span></div>
+      <div id="hint-bar">tap / click to nudge · E or KICK to shoot</div>
     </div>
 
-    <!-- mobile controls -->
     <div id="mobile-btns">
-      <button class="m-btn" id="btn-nudge">👆 TAP MODE</button>
       <button class="m-btn" id="btn-kick">⚡ KICK</button>
       <button class="m-btn" id="btn-reset">↺ Reset</button>
     </div>
 
     <div id="settings">
-      <div class="setting-group">
+      <div class="setting-group free-mode-only">
         <h4>// goal zone</h4>
         <div class="ctrl"><label>Size</label><div class="ctrl-right"><input type="range" id="gz-s" min="40" max="200" value="90"><span class="ctrl-val" id="gz-s-v">90</span></div></div>
         <div class="ctrl"><label>Width</label><div class="ctrl-right"><input type="range" id="gz-w" min="10" max="40" value="14"><span class="ctrl-val" id="gz-w-v">14</span></div></div>
       </div>
       <div class="setting-group">
         <h4>// goalkeeper</h4>
-        <div class="ctrl"><label>GK X</label><div class="ctrl-right"><input type="range" id="gk-x" min="5" max="95" value="88"><span class="ctrl-val" id="gk-x-v">88</span></div></div>
-        <div class="ctrl"><label>GK Y</label><div class="ctrl-right"><input type="range" id="gk-y" min="10" max="90" value="50"><span class="ctrl-val" id="gk-y-v">50</span></div></div>
+        <div class="ctrl free-mode-only"><label>GK X</label><div class="ctrl-right"><input type="range" id="gk-x" min="5" max="95" value="88"><span class="ctrl-val" id="gk-x-v">88</span></div></div>
+        <div class="ctrl free-mode-only"><label>GK Y</label><div class="ctrl-right"><input type="range" id="gk-y" min="10" max="90" value="50"><span class="ctrl-val" id="gk-y-v">50</span></div></div>
         <div class="ctrl"><label>Speed</label><div class="ctrl-right"><input type="range" id="gk-spd" min="1" max="10" value="3"><span class="ctrl-val" id="gk-spd-v">3</span></div></div>
       </div>
       <div class="setting-group">
@@ -182,7 +230,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
         <div class="ctrl"><label>Friction</label><div class="ctrl-right"><input type="range" id="fric" min="90" max="99" value="97"><span class="ctrl-val" id="fric-v">97</span></div></div>
         <div class="ctrl"><label>Kick power</label><div class="ctrl-right"><input type="range" id="kpow" min="8" max="30" value="18"><span class="ctrl-val" id="kpow-v">18</span></div></div>
       </div>
-      <p class="settings-note">💡 Drag the goal zone directly on the pitch to reposition it</p>
+      <p class="settings-note" id="settings-note">💡 Drag the goal zone on the pitch · In penalty mode goal is locked + GK predicts your aim</p>
     </div>
   </div>
 </section>
@@ -193,7 +241,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
     <div class="about-card">
       <div class="card-icon">⚽</div>
       <div class="card-title">The Game</div>
-      <p class="card-text">A simple football game built in the browser. Nudge the ball, kick it past the AI goalkeeper, and score! Fully customizable — drag the goal anywhere, resize it, tweak keeper speed.</p>
+      <p class="card-text">A browser football game with two modes: Free mode lets you nudge and kick freely with a draggable goal. Penalty mode locks the goal in place, lets you aim anywhere on the pitch, and pits you against a keeper who reads your trajectory — score 5 to win.</p>
     </div>
     <div class="about-card">
       <div class="card-icon">👤</div>
@@ -209,243 +257,487 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:24
 </footer>
 
 <script>
-const fc=document.getElementById('fc');
-const ballEl=document.getElementById('ball');
-const gkEl=document.getElementById('gk');
-const gzEl=document.getElementById('gz');
-const flash=document.getElementById('kick-flash');
-const gcEl=document.getElementById('gc');
-const totalGoalsEl=document.getElementById('total-goals');
-const popup=document.getElementById('goal-popup');
-const hintBar=document.getElementById('hint-bar');
+/* ============================================================
+   ELEMENTS
+============================================================ */
+const fc        = document.getElementById('fc');
+const ballEl    = document.getElementById('ball');
+const gkEl      = document.getElementById('gk');
+const gkLabelEl = document.getElementById('gk-label');
+const gzEl      = document.getElementById('gz');
+const gzLabelEl = document.getElementById('gz-label');
+const flash     = document.getElementById('kick-flash');
+const penFlash  = document.getElementById('penalty-kick-flash');
+const gcEl      = document.getElementById('gc');
+const totalGoalsEl = document.getElementById('total-goals');
+const popup     = document.getElementById('goal-popup');
+const hintBar   = document.getElementById('hint-bar');
+const aimEl     = document.getElementById('aim-indicator');
+const penOverlay= document.getElementById('penalty-overlay');
+const penScoreEl= document.getElementById('pen-score');
+const penGEl    = document.getElementById('pen-g');
+const penSEl    = document.getElementById('pen-s');
+const heroModeStat = document.getElementById('hero-mode-stat');
+const btnKick   = document.getElementById('btn-kick');
 
-let bx,by,vx=0,vy=0,goals=0;
-// goal zone position as pixel (set after pitch renders)
-let gzPX,gzPY,gzS=90,gzW=14;
-let gkX=88,gkY=50,gkSpd=3;
-let bSize=28,friction=0.97,kickPow=18;
-let isMobile='ontouchstart' in window;
+/* ============================================================
+   STATE
+============================================================ */
+let bx, by, vx=0, vy=0, goals=0;
+let gzPX, gzPY, gzS=90, gzW=14;
+let gkX=88, gkY=50, gkSpd=3;
+let bSize=28, friction=0.97, kickPow=18;
 
-function W(){return fc.clientWidth;}
-function H(){return fc.clientHeight;}
+// penalty state
+let penaltyMode = false;
+let penPhase    = 'aim'; // 'aim' | 'flying' | 'result'
+let penGoals    = 0, penSaved = 0;
+let penAimX, penAimY;          // where user is hovering/aiming
+let gkDiveDir   = null;        // null | 'up'|'down'|'left'|'right'
+let gkDiveTargetY = 50;        // where GK will actually move on kick
+let penResultTimer = null;
 
-/* ---- GOAL ZONE DRAG ---- */
-let gzDragging=false,gzDragOffX=0,gzDragOffY=0;
+/* ============================================================
+   HELPERS
+============================================================ */
+function W(){ return fc.clientWidth; }
+function H(){ return fc.clientHeight; }
 
-function setGZpos(px,py){
-  gzPX=Math.max(gzW,Math.min(W()-gzW,px));
-  gzPY=Math.max(gzS/2,Math.min(H()-gzS/2,py));
-  gzEl.style.left=gzPX+'px';
-  gzEl.style.top=gzPY+'px';
+/* ============================================================
+   GOAL ZONE
+============================================================ */
+let gzDragging=false, gzDragOffX=0, gzDragOffY=0;
+
+function setGZpos(px, py){
+  if(penaltyMode) return; // locked in penalty mode
+  gzPX = Math.max(gzW, Math.min(W()-gzW, px));
+  gzPY = Math.max(gzS/2, Math.min(H()-gzS/2, py));
+  gzEl.style.left = gzPX+'px';
+  gzEl.style.top  = gzPY+'px';
 }
 function updateGZsize(){
-  gzEl.style.width=gzW+'px';
-  gzEl.style.height=gzS+'px';
+  gzEl.style.width  = gzW+'px';
+  gzEl.style.height = gzS+'px';
+}
+function lockGoalZone(lock){
+  if(lock){
+    gzEl.classList.remove('draggable','dragging');
+    gzEl.classList.add('locked');
+    gzLabelEl.textContent = '🔒 GOAL — locked';
+  } else {
+    gzEl.classList.remove('locked');
+    gzEl.classList.add('draggable');
+    gzLabelEl.textContent = '⚽ GOAL — drag me';
+  }
 }
 
 // mouse drag
-gzEl.addEventListener('mousedown',e=>{
-  gzDragging=true;
-  gzEl.classList.add('dragging');
+gzEl.addEventListener('mousedown', e=>{
+  if(penaltyMode) return;
+  gzDragging=true; gzEl.classList.add('dragging');
   const r=fc.getBoundingClientRect();
   gzDragOffX=e.clientX-r.left-gzPX;
   gzDragOffY=e.clientY-r.top-gzPY;
-  e.stopPropagation();e.preventDefault();
+  e.stopPropagation(); e.preventDefault();
 });
-document.addEventListener('mousemove',e=>{
-  if(!gzDragging)return;
+document.addEventListener('mousemove', e=>{
+  if(!gzDragging) return;
   const r=fc.getBoundingClientRect();
   setGZpos(e.clientX-r.left-gzDragOffX, e.clientY-r.top-gzDragOffY);
 });
-document.addEventListener('mouseup',()=>{
-  if(gzDragging){gzDragging=false;gzEl.classList.remove('dragging');}
+document.addEventListener('mouseup', ()=>{
+  if(gzDragging){ gzDragging=false; gzEl.classList.remove('dragging'); }
 });
 
 // touch drag on goal zone
-gzEl.addEventListener('touchstart',e=>{
-  gzDragging=true;
-  gzEl.classList.add('dragging');
+gzEl.addEventListener('touchstart', e=>{
+  if(penaltyMode) return;
+  gzDragging=true; gzEl.classList.add('dragging');
   const r=fc.getBoundingClientRect();
   const t=e.touches[0];
   gzDragOffX=t.clientX-r.left-gzPX;
   gzDragOffY=t.clientY-r.top-gzPY;
-  e.stopPropagation();e.preventDefault();
+  e.stopPropagation(); e.preventDefault();
 },{passive:false});
-document.addEventListener('touchmove',e=>{
-  if(!gzDragging)return;
+document.addEventListener('touchmove', e=>{
+  if(!gzDragging) return;
   const r=fc.getBoundingClientRect();
   const t=e.touches[0];
   setGZpos(t.clientX-r.left-gzDragOffX, t.clientY-r.top-gzDragOffY);
   e.preventDefault();
 },{passive:false});
-document.addEventListener('touchend',()=>{
-  if(gzDragging){gzDragging=false;gzEl.classList.remove('dragging');}
+document.addEventListener('touchend', ()=>{
+  if(gzDragging){ gzDragging=false; gzEl.classList.remove('dragging'); }
 });
 
-/* ---- GK ---- */
+/* ============================================================
+   GK
+============================================================ */
 function updateGK(){
-  gkEl.style.left=(W()*gkX/100)+'px';
-  gkEl.style.top=(H()*gkY/100)+'px';
+  gkEl.style.left = (W()*gkX/100)+'px';
+  gkEl.style.top  = (H()*gkY/100)+'px';
 }
 
-/* ---- PITCH LINES ---- */
+/* ============================================================
+   PITCH LINES
+============================================================ */
 function drawPitch(){
   fc.querySelectorAll('.pitch-line,.pitch-circle').forEach(e=>e.remove());
   const mk=(t,l,w,h)=>{
-    const d=document.createElement('div');d.className='pitch-line';
+    const d=document.createElement('div'); d.className='pitch-line';
     Object.assign(d.style,{top:t+'px',left:l+'px',width:w+'px',height:h+'px'});
     fc.insertBefore(d,fc.firstChild);
   };
-  const w=W(),h=H();
-  mk(0,0,w,2);mk(h-2,0,w,2);
-  mk(0,0,2,h);mk(0,w-2,2,h);
-  mk(0,w/2-1,2,h);mk(h/2-1,0,w,2);
-  const c=document.createElement('div');c.className='pitch-circle';
+  const w=W(), h=H();
+  mk(0,0,w,2); mk(h-2,0,w,2);
+  mk(0,0,2,h); mk(0,w-2,2,h);
+  mk(0,w/2-1,2,h); mk(h/2-1,0,w,2);
+  const c=document.createElement('div'); c.className='pitch-circle';
   Object.assign(c.style,{position:'absolute',left:w/2-55+'px',top:h/2-55+'px',width:'110px',height:'110px',border:'2px solid rgba(255,255,255,0.25)',borderRadius:'50%',pointerEvents:'none'});
   fc.insertBefore(c,fc.firstChild);
 }
 
-/* ---- GAME LOOP ---- */
+/* ============================================================
+   GAME LOOP
+============================================================ */
 function loop(){
-  const w=W(),h=H(),r=bSize/2;
-  vx*=friction;vy*=friction;
-  if(Math.abs(vx)<0.04)vx=0;
-  if(Math.abs(vy)<0.04)vy=0;
-  bx+=vx;by+=vy;
+  const w=W(), h=H(), r=bSize/2;
+  vx*=friction; vy*=friction;
+  if(Math.abs(vx)<0.04) vx=0;
+  if(Math.abs(vy)<0.04) vy=0;
+  bx+=vx; by+=vy;
   if(bx-r<0){bx=r;vx=Math.abs(vx)*0.65;}
   if(bx+r>w){bx=w-r;vx=-Math.abs(vx)*0.65;}
   if(by-r<0){by=r;vy=Math.abs(vy)*0.65;}
   if(by+r>h){by=h-r;vy=-Math.abs(vy)*0.65;}
 
-  // GK collision
-  const gkCX=w*gkX/100,gkCY=h*gkY/100;
-  const dx=bx-gkCX,dy=by-gkCY;
-  if(Math.abs(dx)<r+13&&Math.abs(dy)<r+22){
-    const ox=r+13-Math.abs(dx),oy=r+22-Math.abs(dy);
-    if(ox<oy){vx=dx>0?Math.abs(vx)+3:-Math.abs(vx)-3;bx+=dx>0?ox:-ox;}
-    else{vy=dy>0?Math.abs(vy)+3:-Math.abs(vy)-3;by+=dy>0?oy:-oy;}
-  }
-
-  // goal check (use pixel positions)
-  if(gzPX!==undefined){
-    const halfH=gzS/2,halfW=gzW/2+2;
-    if(bx+r>gzPX-halfW&&bx-r<gzPX+halfW&&by+r>gzPY-halfH&&by-r<gzPY+halfH){
-      goals++;
-      gcEl.textContent=goals;
-      totalGoalsEl.textContent=goals;
-      bx=w/2;by=h/2;vx=0;vy=0;
-      showGoal();
+  // GK collision (only in free mode, penalty GK dives on kick)
+  if(!penaltyMode){
+    const gkCX=w*gkX/100, gkCY=h*gkY/100;
+    const dx=bx-gkCX, dy=by-gkCY;
+    if(Math.abs(dx)<r+13 && Math.abs(dy)<r+22){
+      const ox=r+13-Math.abs(dx), oy=r+22-Math.abs(dy);
+      if(ox<oy){vx=dx>0?Math.abs(vx)+3:-Math.abs(vx)-3; bx+=dx>0?ox:-ox;}
+      else{vy=dy>0?Math.abs(vy)+3:-Math.abs(vy)-3; by+=dy>0?oy:-oy;}
+    }
+    // GK AI — track ball Y slowly
+    const targetY=(by/h)*100;
+    gkY+=(targetY-gkY)*(gkSpd*0.01);
+    gkY=Math.max(8,Math.min(92,gkY));
+    updateGK();
+  } else {
+    // penalty — GK dives toward decided target after kick
+    if(penPhase==='flying'){
+      const targetY=gkDiveTargetY;
+      gkY+=(targetY-gkY)*(gkSpd*0.05);
+      gkY=Math.max(8,Math.min(92,gkY));
+      updateGK();
     }
   }
 
-  ballEl.style.left=bx+'px';ballEl.style.top=by+'px';
-  ballEl.style.width=bSize+'px';ballEl.style.height=bSize+'px';
-  ballEl.style.marginLeft=(-bSize/2)+'px';ballEl.style.marginTop=(-bSize/2)+'px';
+  // goal check
+  if(gzPX!==undefined){
+    const halfH=gzS/2, halfW=gzW/2+2;
+    if(bx+r>gzPX-halfW && bx-r<gzPX+halfW && by+r>gzPY-halfH && by-r<gzPY+halfH){
+      if(penaltyMode && penPhase==='flying'){
+        penGoals++; penGEl.textContent=penGoals;
+        goals++; gcEl.textContent=goals; totalGoalsEl.textContent=goals;
+        showPopup('GOAL!', false);
+        penPhase='result';
+        schedulePenReset();
+      } else if(!penaltyMode){
+        goals++; gcEl.textContent=goals; totalGoalsEl.textContent=goals;
+        showPopup('GOAL!', false);
+        bx=w/2; by=h/2; vx=0; vy=0;
+      }
+    }
+  }
 
-  // GK AI — track ball Y
-  const targetY=(by/h)*100;
-  gkY+=(targetY-gkY)*(gkSpd*0.01);
-  gkY=Math.max(8,Math.min(92,gkY));
-  updateGK();
+  // penalty: check if ball passed GK zone without going in goal → saved
+  if(penaltyMode && penPhase==='flying' && gzPX!==undefined){
+    const gkCX=w*gkX/100, gkCY=h*gkY/100;
+    const dx=bx-gkCX, dy=by-gkCY;
+    // very generous hitbox when diving
+    if(Math.abs(dx)<r+20 && Math.abs(dy)<r+36){
+      penSaved++; penSEl.textContent=penSaved;
+      showPopup('SAVED!', true);
+      penPhase='result';
+      vx=0; vy=0;
+      schedulePenReset();
+    }
+    // ball went past goal line area without scoring = saved (missed)
+    if(bx+r>w){
+      penSaved++; penSEl.textContent=penSaved;
+      showPopup('MISSED!', true);
+      penPhase='result';
+      vx=0; vy=0;
+      schedulePenReset();
+    }
+  }
+
+  ballEl.style.left = bx+'px'; ballEl.style.top = by+'px';
+  ballEl.style.width = bSize+'px'; ballEl.style.height = bSize+'px';
+  ballEl.style.marginLeft = (-bSize/2)+'px'; ballEl.style.marginTop = (-bSize/2)+'px';
 
   requestAnimationFrame(loop);
 }
 
-function showGoal(){
+/* ============================================================
+   POPUP
+============================================================ */
+function showPopup(text, isBad){
+  popup.textContent = text;
+  popup.classList.toggle('saved', isBad);
   popup.style.transform='translate(-50%,-50%) scale(1)';
   popup.style.opacity='1';
-  setTimeout(()=>{
-    popup.style.transform='translate(-50%,-50%) scale(0)';
-    popup.style.opacity='0';
-  },1100);
+  setTimeout(()=>{ popup.style.transform='translate(-50%,-50%) scale(0)'; popup.style.opacity='0'; },1100);
 }
 
+/* ============================================================
+   KICK (FREE MODE)
+============================================================ */
 function doKick(){
-  if(gzPX===undefined)return;
-  const dx=gzPX-bx,dy=gzPY-by,d=Math.hypot(dx,dy)||1;
-  vx=(dx/d)*kickPow;vy=(dy/d)*kickPow;
-  flash.style.left=bx+'px';flash.style.top=by+'px';
-  flash.style.transition='none';
-  flash.style.transform='translate(-50%,-50%) scale(0)';
-  flash.style.opacity='0.9';
+  if(penaltyMode){ doPenaltyKick(); return; }
+  if(gzPX===undefined) return;
+  const dx=gzPX-bx, dy=gzPY-by, d=Math.hypot(dx,dy)||1;
+  vx=(dx/d)*kickPow; vy=(dy/d)*kickPow;
+  triggerFlash(flash, bx, by);
+}
+
+/* ============================================================
+   PENALTY KICK
+============================================================ */
+function doPenaltyKick(){
+  if(penPhase!=='aim') return;
+  if(penAimX===undefined) return;
+
+  penPhase='flying';
+
+  // direction of aim relative to goal
+  const dx=penAimX-bx, dy=penAimY-by, d=Math.hypot(dx,dy)||1;
+  vx=(dx/d)*kickPow*1.3; vy=(dy/d)*kickPow*1.3;
+
+  // GK PREDICTION: reads trajectory + adds small random error
+  // predict where ball crosses gk's X line
+  const gkCX = W()*gkX/100;
+  const timeToGK = d>0 ? (gkCX - bx) / vx : 1;
+  let predictedY = by + vy * timeToGK;
+
+  // add prediction error — harder GK speed = less error
+  const errorRange = (180 - gkSpd*15); // higher speed → tighter prediction
+  const error = (Math.random()-0.5) * errorRange;
+  predictedY += error;
+
+  // clamp to pitch
+  predictedY = Math.max(0, Math.min(H(), predictedY));
+  gkDiveTargetY = (predictedY / H()) * 100;
+
+  // pick dive animation direction
+  const aimRelY = penAimY / H(); // 0=top 1=bottom
+  const gkRelY  = gkY / 100;
+  const diffY   = aimRelY - gkRelY;
+  const diffX   = (penAimX / W()) - (gkX / 100);
+  let diveClass;
+  if(Math.abs(diffY) > Math.abs(diffX)){
+    diveClass = diffY < 0 ? 'dive-up' : 'dive-down';
+  } else {
+    diveClass = diffX < 0 ? 'dive-left' : 'dive-right';
+  }
+  gkEl.classList.remove('dive-up','dive-down','dive-left','dive-right');
+  void gkEl.offsetWidth; // reflow
+  gkEl.classList.add(diveClass);
+
+  triggerFlash(penFlash, bx, by);
+  aimEl.style.display='none';
+}
+
+function schedulePenReset(){
+  clearTimeout(penResultTimer);
+  penResultTimer = setTimeout(()=>{
+    resetPenaltyBall();
+  }, 1400);
+}
+
+function resetPenaltyBall(){
+  const w=W(), h=H();
+  // put ball at penalty spot: 1/3 from right, middle height
+  bx = w*0.62; by = h*0.5;
+  vx=0; vy=0;
+  penPhase='aim';
+  gkEl.classList.remove('dive-up','dive-down','dive-left','dive-right');
+  // reset GK to center of goal area
+  gkY=50; updateGK();
+  aimEl.style.display='block';
+}
+
+/* ============================================================
+   FLASH HELPER
+============================================================ */
+function triggerFlash(el, x, y){
+  el.style.left=x+'px'; el.style.top=y+'px';
+  el.style.transition='none';
+  el.style.transform='translate(-50%,-50%) scale(0)';
+  el.style.opacity='0.9';
   requestAnimationFrame(()=>{
-    flash.style.transition='transform 0.35s ease-out,opacity 0.35s';
-    flash.style.transform='translate(-50%,-50%) scale(2.5)';
-    flash.style.opacity='0';
+    el.style.transition='transform 0.35s ease-out,opacity 0.35s';
+    el.style.transform='translate(-50%,-50%) scale(2.5)';
+    el.style.opacity='0';
   });
 }
 
-/* ---- PITCH TAP / CLICK to nudge ---- */
-function nudgeToward(clientX,clientY){
-  if(gzDragging)return;
+/* ============================================================
+   AIM TRACKING (penalty mode hover/touch)
+============================================================ */
+fc.addEventListener('mousemove', e=>{
+  if(!penaltyMode || penPhase!=='aim') return;
   const r=fc.getBoundingClientRect();
-  const mx=clientX-r.left,my=clientY-r.top;
-  const dx=mx-bx,dy=my-by,d=Math.hypot(dx,dy)||1;
-  vx+=(dx/d)*5;vy+=(dy/d)*5;
+  penAimX = e.clientX - r.left;
+  penAimY = e.clientY - r.top;
+  aimEl.style.left=penAimX+'px'; aimEl.style.top=penAimY+'px';
+});
+
+/* ============================================================
+   NUDGE / TAP (free mode)
+============================================================ */
+function nudgeToward(clientX, clientY){
+  if(gzDragging || penaltyMode) return;
+  const r=fc.getBoundingClientRect();
+  const mx=clientX-r.left, my=clientY-r.top;
+  const dx=mx-bx, dy=my-by, d=Math.hypot(dx,dy)||1;
+  vx+=(dx/d)*5; vy+=(dy/d)*5;
 }
 
-fc.addEventListener('click',e=>nudgeToward(e.clientX,e.clientY));
+// penalty: click on pitch = set aim and kick
+function penAimAndKick(clientX, clientY){
+  if(penPhase!=='aim') return;
+  const r=fc.getBoundingClientRect();
+  penAimX = clientX - r.left;
+  penAimY = clientY - r.top;
+  aimEl.style.left=penAimX+'px'; aimEl.style.top=penAimY+'px';
+  doPenaltyKick();
+}
 
-// touch on pitch: nudge (not on goal zone)
-fc.addEventListener('touchstart',e=>{
-  if(gzDragging)return;
+fc.addEventListener('click', e=>{
+  if(penaltyMode) penAimAndKick(e.clientX, e.clientY);
+  else nudgeToward(e.clientX, e.clientY);
+});
+
+fc.addEventListener('touchstart', e=>{
+  if(gzDragging) return;
   e.preventDefault();
   const t=e.changedTouches[0];
-  nudgeToward(t.clientX,t.clientY);
+  if(penaltyMode) penAimAndKick(t.clientX, t.clientY);
+  else nudgeToward(t.clientX, t.clientY);
 },{passive:false});
 
-/* ---- KEYBOARD ---- */
-document.addEventListener('keydown',e=>{
-  if(e.key==='e'||e.key==='E'){e.preventDefault();doKick();}
+/* ============================================================
+   KEYBOARD
+============================================================ */
+document.addEventListener('keydown', e=>{
+  if(e.key==='e'||e.key==='E'){ e.preventDefault(); doKick(); }
 });
 
-/* ---- MOBILE BUTTONS ---- */
-document.getElementById('btn-kick').addEventListener('click',doKick);
-document.getElementById('btn-reset').addEventListener('click',()=>{
-  bx=W()/2;by=H()/2;vx=0;vy=0;
+/* ============================================================
+   MODE SWITCH
+============================================================ */
+document.getElementById('btn-free-mode').addEventListener('click', ()=>setMode(false));
+document.getElementById('btn-pen-mode').addEventListener('click',  ()=>setMode(true));
+
+function setMode(isPenalty){
+  penaltyMode = isPenalty;
+  clearTimeout(penResultTimer);
+
+  document.getElementById('btn-free-mode').classList.toggle('active', !isPenalty);
+  document.getElementById('btn-pen-mode').classList.toggle('active',  isPenalty);
+  document.body.classList.toggle('penalty-active', isPenalty);
+
+  penOverlay.classList.toggle('on', isPenalty);
+  penScoreEl.style.display = isPenalty ? 'block' : 'none';
+  heroModeStat.textContent = isPenalty ? 'PEN' : 'FREE';
+
+  btnKick.classList.toggle('penalty-mode', isPenalty);
+  btnKick.textContent = isPenalty ? '🎯 SHOOT' : '⚡ KICK';
+
+  lockGoalZone(isPenalty);
+
+  if(isPenalty){
+    // place goal on right wall, centered
+    const w=W(), h=H();
+    gzPX = w*0.97; gzPY = h*0.5; gzS=110; gzW=14;
+    gzEl.style.left=gzPX+'px'; gzEl.style.top=gzPY+'px';
+    updateGZsize();
+    // fix GK at goal area
+    gkX=88; gkY=50; updateGK();
+    gkLabelEl.textContent='GK 🧤';
+    // reset penalty score
+    penGoals=0; penSaved=0;
+    penGEl.textContent='0'; penSEl.textContent='0';
+    hintBar.textContent='click/tap anywhere to aim & shoot';
+    aimEl.style.display='block';
+    resetPenaltyBall();
+    penPhase='aim';
+  } else {
+    aimEl.style.display='none';
+    gkLabelEl.textContent='GK';
+    const w=W(), h=H();
+    bx=w/2; by=h/2; vx=0; vy=0;
+    gkX=88; gkY=50; updateGK();
+    gzPX=w*0.94; gzPY=h*0.5; gzS=90; gzW=14;
+    gzEl.style.left=gzPX+'px'; gzEl.style.top=gzPY+'px';
+    updateGZsize();
+    hintBar.textContent='tap / click to nudge · E or KICK to shoot';
+  }
+}
+
+/* ============================================================
+   MOBILE KICK BUTTON
+============================================================ */
+btnKick.addEventListener('click', doKick);
+document.getElementById('btn-reset').addEventListener('click', ()=>{
+  if(penaltyMode){ penPhase='aim'; resetPenaltyBall(); }
+  else { bx=W()/2; by=H()/2; vx=0; vy=0; }
 });
 
-/* ---- SLIDERS ---- */
-function bindSlider(id,setter){
+/* ============================================================
+   SLIDERS
+============================================================ */
+function bindSlider(id, setter){
   const el=document.getElementById(id);
   const valEl=document.getElementById(id+'-v');
-  if(!el)return;
+  if(!el) return;
   el.addEventListener('input',()=>{
-    if(valEl)valEl.textContent=el.value;
+    if(valEl) valEl.textContent=el.value;
     setter(+el.value);
   });
 }
-bindSlider('gz-s',v=>{gzS=v;updateGZsize();});
-bindSlider('gz-w',v=>{gzW=v;updateGZsize();});
-bindSlider('gk-x',v=>{gkX=v;updateGK();});
-bindSlider('gk-y',v=>{gkY=v;updateGK();});
-bindSlider('gk-spd',v=>gkSpd=v);
-bindSlider('bs',v=>bSize=v);
-bindSlider('fric',v=>friction=v/100);
-bindSlider('kpow',v=>kickPow=v);
+bindSlider('gz-s', v=>{ gzS=v; updateGZsize(); });
+bindSlider('gz-w', v=>{ gzW=v; updateGZsize(); });
+bindSlider('gk-x', v=>{ gkX=v; updateGK(); });
+bindSlider('gk-y', v=>{ gkY=v; updateGK(); });
+bindSlider('gk-spd', v=>gkSpd=v);
+bindSlider('bs',   v=>bSize=v);
+bindSlider('fric', v=>friction=v/100);
+bindSlider('kpow', v=>kickPow=v);
 
-/* ---- INIT ---- */
+/* ============================================================
+   INIT
+============================================================ */
 function init(){
   drawPitch();
-  const w=W(),h=H();
-  bx=w/2;by=h/2;
-  // default goal zone on right side
-  gzPX=w*0.94;gzPY=h*0.5;
+  const w=W(), h=H();
+  bx=w/2; by=h/2;
+  gzPX=w*0.94; gzPY=h*0.5;
   updateGZsize();
-  gzEl.style.left=gzPX+'px';
-  gzEl.style.top=gzPY+'px';
+  gzEl.style.left=gzPX+'px'; gzEl.style.top=gzPY+'px';
+  gzEl.classList.add('draggable');
   updateGK();
 }
 
-window.addEventListener('resize',()=>{
-  const w=W(),h=H();
-  // keep goal zone roughly same relative position
+window.addEventListener('resize', ()=>{
+  drawPitch(); updateGK();
   if(gzPX!==undefined){
-    gzPX=Math.max(gzW,Math.min(w-gzW,gzPX*(w/W())));
-    gzPY=Math.max(gzS/2,Math.min(h-gzS/2,gzPY*(h/H())));
-    gzEl.style.left=gzPX+'px';gzEl.style.top=gzPY+'px';
+    gzEl.style.left=gzPX+'px'; gzEl.style.top=gzPY+'px';
   }
-  drawPitch();updateGK();
 });
 
 init();
@@ -453,3 +745,5 @@ loop();
 </script>
 </body>
 </html>
+HTMLEOF
+echo "done"
